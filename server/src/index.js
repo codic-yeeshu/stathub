@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 
 const app = express();
@@ -9,6 +10,6 @@ app.get('/', (req, res) => {
   res.send('Server is up and running!');
 });
 
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
+const server = app.listen(port, () => {
+  console.log(`Server running at http://localhost:${server.address().port}`);
 });
