@@ -24,7 +24,7 @@ app.use('/matches', matchesRouter);
 const { broadcastMatchCreated } = attachWebSocketServer(server)
 app.locals.broadcastMatchCreated = broadcastMatchCreated
 
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   const baseUrl = HOST === '0.0.0.0' ? `http://localhost:${PORT}` : `http://${HOST}:${PORT}`
   logIt(`Server is running at ${baseUrl}`);
   logIt(`WebSocket server is running at ${baseUrl.replace('http', 'ws')}/ws`)
