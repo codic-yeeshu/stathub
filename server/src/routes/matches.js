@@ -31,6 +31,8 @@ matchesRouter.get('/', async (req, res) => {
   }
 });
 
+
+// create a match
 matchesRouter.post('/', async (req, res) => {
   const parsedMatch = await createMatchSchema.safeParseAsync(req.body);
   if (!parsedMatch.success) {
@@ -48,6 +50,11 @@ matchesRouter.post('/', async (req, res) => {
       awayScore: awayScore ?? 0,
       status: getMatchStatus(startTime, endTime),
     }).returning();
+
+    // if match created successfully then broadcast it to all connected clients
+
+    if (res.app.locals.broadcastMatchCreated) res.app.locals.broadcastMatchCreated(event);
+
     return res.status(200).json({ message: 'Match created', event });
 
   } catch (error) {
