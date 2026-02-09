@@ -5,6 +5,7 @@ import express from 'express';
 import { matchesRouter } from './routes/matches.js';
 import { attachWebSocketServer } from './ws/server.js';
 import { logIt } from './utils/utils.js';
+import { securityMiddleware } from './arcjet.js';
 
 const PORT = Number(process.env.PORT || 8000);
 const HOST = process.env.HOST || '0.0.0.0'
@@ -17,10 +18,13 @@ app.get('/', (req, res) => {
   res.send('Server is up and running!');
 });
 
+// arcjet security middleware to protect the api endpoints
+app.use(securityMiddleware());
+
 // Routes
 app.use('/matches', matchesRouter);
 
-
+// attach the websocket server with the express app
 const { broadcastMatchCreated } = attachWebSocketServer(server)
 app.locals.broadcastMatchCreated = broadcastMatchCreated
 
