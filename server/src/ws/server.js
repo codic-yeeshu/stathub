@@ -25,7 +25,7 @@ export function attachWebSocketServer(server) {
       return;
     }
 
-    // set the current socket as alive while connectiong and while reciving a pong heartbeat.
+    // set the current socket as alive while connecting and while receiving a pong heartbeat.
     socket.isAlive = true
     socket.on('pong', () => { socket.isAlive = true })
 

@@ -1,15 +1,15 @@
 import arcjet, {detectBot, shield, slidingWindow} from '@arcjet/node';
 import { logError } from './utils/utils.js';
-const arcjectKey = process.env.ARCJET_KEY;
+const arcjetKey = process.env.ARCJET_KEY;
 const arcjetMode = process.env.ARCJET_MODE === 'DRY_RUN' ? 'DRY_RUN' : 'LIVE';
 
-if (!arcjectKey) {
+if (!arcjetKey) {
   logError('ARCJET_KEY is not set. Arcjet security is disabled.');
 }
 
-export const httpArcjet = arcjectKey ?
+export const httpArcjet = arcjetKey ?
   arcjet({
-    key: arcjectKey,
+    key: arcjetKey,
     rules: [
       shield({ mode: arcjetMode }),
       detectBot({ mode: arcjetMode, allow: ['CATEGORY:SEARCH_ENGINE', 'CATEGORY:PREVIEW'] }),
@@ -18,9 +18,9 @@ export const httpArcjet = arcjectKey ?
   }) : null;
 
 
-export const wsArcjet = arcjectKey ?
+export const wsArcjet = arcjetKey ?
   arcjet({
-    key: arcjectKey,
+    key: arcjetKey,
     rules: [
       shield({ mode: arcjetMode }),
       detectBot({ mode: arcjetMode, allow: ['CATEGORY:SEARCH_ENGINE', 'CATEGORY:PREVIEW'] }),

@@ -10,7 +10,7 @@ const MAX_LIMIT = 100;
 
 // To fetch all the matches list.
 matchesRouter.get('/', async (req, res) => {
-  logIt("matchesRouter:", "Startig to fetch the matches list.")
+  logIt("matchesRouter:", "Starting to fetch the matches list.")
   const parsedQuery = await listMatchesQuerySchema.safeParseAsync(req.query);
   if (!parsedQuery.success) {
     return res.status(400).json({ error: "Invalid Query.", details: parsedQuery.error.issues });
@@ -24,7 +24,7 @@ matchesRouter.get('/', async (req, res) => {
       .orderBy(desc(matches.createdAt))
       .limit(limit)
     logIt("matchesRouter:", "Match List fetched successfully.")
-    return res.status(200).json({ message: "Fetched mathes list.", data: matchData })
+    return res.status(200).json({ message: "Fetched matches list.", data: matchData })
   } catch (error) {
     logIt("matchesRouter:", "error while fetching the matches list", error)
     return res.status(500).json({ error: "Failed to fetch the matches list. Internal Server Error" })
