@@ -1,11 +1,10 @@
 import arcjet, {detectBot, shield, slidingWindow} from '@arcjet/node';
 import { logError } from './utils/utils.js';
-import { success } from 'zod';
 const arcjectKey = process.env.ARCJET_KEY;
 const arcjetMode = process.env.ARCJET_MODE === 'DRY_RUN' ? 'DRY_RUN' : 'LIVE';
 
 if (!arcjectKey) {
-  throw new Error('ARCJET_KEY is not set. Arcjet will not be initialized.');
+  logError('ARCJET_KEY is not set. Arcjet security is disabled.');
 }
 
 export const httpArcjet = arcjectKey ?

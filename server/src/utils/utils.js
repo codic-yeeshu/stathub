@@ -3,6 +3,6 @@ export const logIt = (...args) => {
 };
 
 export const logError = (...args) => {
-  if ( true ) console.log(...args);
+  console.error("ERROR:", ...args);
 };
 
