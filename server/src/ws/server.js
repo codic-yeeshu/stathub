@@ -1,5 +1,6 @@
 import { WebSocket, WebSocketServer } from "ws";
 import { wsSecurityMiddleware } from "../arcjet.js";
+import { logError, logIt, logWarn } from "../utils/utils.js";
 
 function sendJson(socket, payload) {
 	if (socket.readyState !== WebSocket.OPEN) return;
@@ -17,18 +18,40 @@ function broadcast(wss, payload) {
 
 export function attachWebSocketServer(server) {
 	const wss = new WebSocketServer({
-		server,
-		path: "/ws",
+		noServer: true,
 		maxPayload: 1024 * 1024,
 	});
 
-	wss.on("connection", async (socket, req) => {
-		const { success, code, reason } = (await wsSecurityMiddleware(req)) || {};
-		if (!success) {
-			socket.close(code, reason);
+	server.on("upgrade", async (req, socket, head) => {
+		logIt(`Received upgrade request.`);
+		const isSecure = req.socket.encrypted || req.headers["x-forwarded-proto"] === "https";
+		const protocol = isSecure ? "https" : "http";
+
+		const { pathname } = new URL(req.url, `${protocol}://${req.headers.host}`);
+
+		if (pathname !== "/ws" || req.headers.upgrade?.toLowerCase() !== "websocket") {
+			socket.destroy();
 			return;
 		}
 
+		const { success, code, reason } = (await wsSecurityMiddleware(req)) || {};
+
+		if (!success) {
+			logWarn("Socket stayed open too long after rejection. Force killing.", code, reason);
+			socket.destroy();
+			return;
+		}
+
+		wss.handleUpgrade(req, socket, head, (ws) => {
+			logIt(`Emitted connection event for wss.`);
+			wss.emit("connection", ws, req);
+		});
+	});
+
+	wss.on("connection", async (socket, _req) => {
+		logIt(
+			`New WebSocket connection established for socket ${socket._socket.remoteAddress}:${socket._socket.remotePort}.`,
+		);
 		// set the current socket as alive while connecting and while receiving a pong heartbeat.
 		socket.isAlive = true;
 		socket.on("pong", () => {
@@ -37,7 +60,7 @@ export function attachWebSocketServer(server) {
 
 		sendJson(socket, { type: "welcome" });
 
-		socket.on("error", console.error);
+		socket.on("error", logError);
 	});
 
 	const checkAliveStatus = setInterval(() => {
