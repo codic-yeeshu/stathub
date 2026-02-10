@@ -34,7 +34,7 @@ matchesRouter.get("/", async (req, res) => {
 			.status(200)
 			.json({ message: "Fetched matches list.", data: matchData });
 	} catch (error) {
-		logIt("matchesRouter:", "error while fetching the matches list", error);
+		logError("matchesRouter:", "error while fetching the matches list", error);
 		return res.status(500).json({
 			error: "Failed to fetch the matches list. Internal Server Error",
 		});
@@ -50,7 +50,7 @@ matchesRouter.post("/", async (req, res) => {
 			.json({ error: "Invalid Payload.", details: parsedMatch.error.issues });
 	}
 
-	console.log("Parsed match", parsedMatch);
+	logIt("Parsed match", parsedMatch);
 	const {
 		data: { startTime, endTime, homeScore, awayScore },
 	} = parsedMatch;
@@ -76,7 +76,7 @@ matchesRouter.post("/", async (req, res) => {
 
 		return res.status(200).json({ message: "Match created", event });
 	} catch (error) {
-		console.log("error while creating the match", error);
+		logError("matchesRouter:", "error while creating the match", error);
 		return res.status(500).json({ error: "Failed to create a match." });
 	}
 });

@@ -1,5 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import { logIt } from "../utils/utils.js";
 
 const { Pool } = pg;
 
@@ -7,7 +8,7 @@ if (!process.env.DATABASE_URL) {
 	throw new Error("DATABASE_URL is not defined");
 }
 
-console.log("Database connection configured");
+logIt("Database connection configured");
 export const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
 });
