@@ -52,14 +52,8 @@ export function securityMiddleware() {
 				return res.status(403).json({ error: "Forbidden." });
 			}
 		} catch (error) {
-			logError(
-				"securityMiddleware:",
-				"Error in Arcjet security middleware",
-				error,
-			);
-			return res
-				.status(503)
-				.json({ error: "Service Unavailable. Please try again later." });
+			logError("securityMiddleware:", "Error in Arcjet security middleware", error);
+			return res.status(503).json({ error: "Service Unavailable. Please try again later." });
 		}
 
 		next();
@@ -84,11 +78,7 @@ export async function wsSecurityMiddleware(req) {
 		}
 		return { success: true };
 	} catch (error) {
-		logError(
-			"wsSecurityMiddleware:",
-			"Error in Arcjet WebSocket security middleware",
-			error,
-		);
+		logError("wsSecurityMiddleware:", "Error in Arcjet WebSocket security middleware", error);
 		return {
 			success: false,
 			code: 1011,

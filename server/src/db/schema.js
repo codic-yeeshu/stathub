@@ -1,20 +1,8 @@
 import { relations } from "drizzle-orm";
-import {
-	integer,
-	jsonb,
-	pgEnum,
-	pgTable,
-	serial,
-	text,
-	timestamp,
-} from "drizzle-orm/pg-core";
+import { integer, jsonb, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
 // Define enums
-export const matchStatusEnum = pgEnum("match_status", [
-	"scheduled",
-	"live",
-	"finished",
-]);
+export const matchStatusEnum = pgEnum("match_status", ["scheduled", "live", "finished"]);
 
 // Matches Table
 export const matches = pgTable("matches", {
