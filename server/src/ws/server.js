@@ -23,29 +23,45 @@ export function attachWebSocketServer(server) {
 	});
 
 	server.on("upgrade", async (req, socket, head) => {
-		logIt(`Received upgrade request.`);
-		const isSecure = req.socket.encrypted || req.headers["x-forwarded-proto"] === "https";
-		const protocol = isSecure ? "https" : "http";
+		try {
+			logIt(`Received upgrade request.`);
+			const isSecure =
+				req.socket.encrypted || req.headers["x-forwarded-proto"] === "https";
+			const protocol = isSecure ? "https" : "http";
 
-		const { pathname } = new URL(req.url, `${protocol}://${req.headers.host}`);
+			const { pathname } = new URL(
+				req.url,
+				`${protocol}://${req.headers.host}`,
+			);
 
-		if (pathname !== "/ws" || req.headers.upgrade?.toLowerCase() !== "websocket") {
+			if (
+				pathname !== "/ws" ||
+				req.headers.upgrade?.toLowerCase() !== "websocket"
+			) {
+				socket.destroy();
+				return;
+			}
+
+			const { success, code, reason } = (await wsSecurityMiddleware(req)) || {};
+
+			if (!success) {
+				logWarn(
+					"Socket stayed open too long after rejection. Force killing.",
+					code,
+					reason,
+				);
+				socket.destroy();
+				return;
+			}
+
+			wss.handleUpgrade(req, socket, head, (ws) => {
+				logIt(`Emitted connection event for wss.`);
+				wss.emit("connection", ws, req);
+			});
+		} catch (err) {
+			logError("WebSocket upgrade failed.", err);
 			socket.destroy();
-			return;
 		}
-
-		const { success, code, reason } = (await wsSecurityMiddleware(req)) || {};
-
-		if (!success) {
-			logWarn("Socket stayed open too long after rejection. Force killing.", code, reason);
-			socket.destroy();
-			return;
-		}
-
-		wss.handleUpgrade(req, socket, head, (ws) => {
-			logIt(`Emitted connection event for wss.`);
-			wss.emit("connection", ws, req);
-		});
 	});
 
 	wss.on("connection", async (socket, _req) => {

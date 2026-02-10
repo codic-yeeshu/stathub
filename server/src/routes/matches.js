@@ -4,7 +4,10 @@ import { db } from "../db/db.js";
 import { matches } from "../db/schema.js";
 import { getMatchStatus } from "../utils/match-status.js";
 import { logError, logIt } from "../utils/utils.js";
-import { createMatchSchema, listMatchesQuerySchema } from "../validation/matches.js";
+import {
+	createMatchSchema,
+	listMatchesQuerySchema,
+} from "../validation/matches.js";
 
 export const matchesRouter = Router();
 const MAX_LIMIT = 100;
@@ -14,16 +17,24 @@ matchesRouter.get("/", async (req, res) => {
 	logIt("matchesRouter:", "Starting to fetch the matches list.");
 	const parsedQuery = await listMatchesQuerySchema.safeParseAsync(req.query);
 	if (!parsedQuery.success) {
-		return res.status(400).json({ error: "Invalid Query.", details: parsedQuery.error.issues });
+		return res
+			.status(400)
+			.json({ error: "Invalid Query.", details: parsedQuery.error.issues });
 	}
 
 	const limit = Math.min(parsedQuery.data.limit ?? 50, MAX_LIMIT);
 	try {
-		const matchData = await db.select().from(matches).orderBy(desc(matches.createdAt)).limit(limit);
+		const matchData = await db
+			.select()
+			.from(matches)
+			.orderBy(desc(matches.createdAt))
+			.limit(limit);
 		logIt("matchesRouter:", "Match List fetched successfully.");
-		return res.status(200).json({ message: "Fetched matches list.", data: matchData });
+		return res
+			.status(200)
+			.json({ message: "Fetched matches list.", data: matchData });
 	} catch (error) {
-		logIt("matchesRouter:", "error while fetching the matches list", error);
+		logError("matchesRouter:", "error while fetching the matches list", error);
 		return res.status(500).json({
 			error: "Failed to fetch the matches list. Internal Server Error",
 		});
@@ -34,7 +45,9 @@ matchesRouter.get("/", async (req, res) => {
 matchesRouter.post("/", async (req, res) => {
 	const parsedMatch = await createMatchSchema.safeParseAsync(req.body);
 	if (!parsedMatch.success) {
-		return res.status(400).json({ error: "Invalid Payload.", details: parsedMatch.error.issues });
+		return res
+			.status(400)
+			.json({ error: "Invalid Payload.", details: parsedMatch.error.issues });
 	}
 
 	logIt("Parsed match", parsedMatch);
