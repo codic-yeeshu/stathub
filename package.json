@@ -1,0 +1,9 @@
+{
+	"scripts": {
+		"lint-format:comment": "Format, lint, and organize imports of all files in the project, excluding files included in .gitignore.",
+		"lint-format": "biome check --write"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.14"
+	}
+}

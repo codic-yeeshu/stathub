@@ -1,8 +1,7 @@
 export const logIt = (...args) => {
-  if ( true ) console.log(...args);
+	console.log("LOG:", ...args);
 };
 
 export const logError = (...args) => {
-  console.error("ERROR:", ...args);
+	console.error("ERROR:", ...args);
 };
-
