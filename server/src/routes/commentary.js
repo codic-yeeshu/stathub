@@ -79,7 +79,7 @@ commentaryRouter.post("/", async (req, res) => {
 
 		res.status(201).json({ data: result });
 	} catch (error) {
-		console.error("Failed to create commentary:", error);
+		logError("Failed to create commentary:", error);
 		res.status(500).json({ error: "Failed to create commentary." });
 	}
 });

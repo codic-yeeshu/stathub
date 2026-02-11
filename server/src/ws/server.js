@@ -62,8 +62,10 @@ function handleMessage(socket, data) {
 
 	try {
 		message = JSON.parse(data.toString());
-	} catch {
+	} catch (err) {
 		sendJson(socket, { type: "error", message: "Invalid JSON" });
+		logError("Failed to parse WebSocket message as JSON:", err);
+		return;
 	}
 
 	if (message?.type === "subscribe" && Number.isInteger(message.matchId)) {
@@ -78,6 +80,7 @@ function handleMessage(socket, data) {
 		socket.subscriptions.delete(message.matchId);
 		sendJson(socket, { type: "unsubscribed", matchId: message.matchId });
 	}
+	return;
 }
 
 export function attachWebSocketServer(server) {
