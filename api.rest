@@ -2,6 +2,92 @@
 @serverUrl = http://localhost:8000
 # @serverUrl = 
 
+
+# ======================== Auth API ========================
+
+
+### =========================================
+### Signup - Valid
+@baseAuthUrl = {{serverUrl}}/api/auth
+### =========================================
+POST {{baseAuthUrl}}/signup
+Content-Type: application/json
+
+{
+  "name": "Yeeshu",
+  "email": "yeeshu@test.com",
+  "password": "Pass1234"
+}
+
+
+
+### =========================================
+### Signup - Duplicate Email
+### =========================================
+POST {{baseAuthUrl}}/signup
+Content-Type: application/json
+
+{
+  "name": "Another User",
+  "email": "yeeshu@test.com",
+  "password": "Pass1234"
+}
+
+
+
+### =========================================
+### Signup - Invalid Password (Too Weak)
+### =========================================
+POST {{baseAuthUrl}}/signup
+Content-Type: application/json
+
+{
+  "name": "Weak User",
+  "email": "weak@test.com",
+  "password": "123"
+}
+
+
+
+### =========================================
+### Login - Valid
+### =========================================
+POST {{baseAuthUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "yeeshu@test.com",
+  "password": "Pass1234"
+}
+
+
+
+### =========================================
+### Login - Wrong Password
+### =========================================
+POST {{baseAuthUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "yeeshu@test.com",
+  "password": "WrongPass"
+}
+
+
+
+### =========================================
+### Login - Non Existing User
+### =========================================
+POST {{baseAuthUrl}}/login
+Content-Type: application/json
+
+{
+  "email": "nouser@test.com",
+  "password": "Pass1234"
+}
+
+
+###
 # ======================== Matches API ========================
 GET {{serverUrl}}/matches/
 Content-Type: application/json
