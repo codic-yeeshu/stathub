@@ -2,6 +2,7 @@ import "dotenv/config";
 import http from "node:http";
 import express from "express";
 import { securityMiddleware } from "./arcjet.js";
+import { authRouter } from "./routes/authRoutes.js";
 import { commentaryRouter } from "./routes/commentary.js";
 import { matchesRouter } from "./routes/matches.js";
 import { logIt } from "./utils/utils.js";
@@ -24,6 +25,7 @@ app.use(securityMiddleware());
 // Routes
 app.use("/matches", matchesRouter);
 app.use("/matches/:id/commentary", commentaryRouter);
+app.use("/api/auth", authRouter);
 
 // attach the websocket server with the express app
 const { broadcastMatchCreated, broadcastCommentary } = attachWebSocketServer(server);
