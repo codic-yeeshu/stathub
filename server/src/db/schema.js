@@ -1,5 +1,14 @@
 import { relations } from "drizzle-orm";
-import { integer, jsonb, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	integer,
+	jsonb,
+	pgEnum,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 
 // Define enums
 export const matchStatusEnum = pgEnum("match_status", ["scheduled", "live", "finished"]);
@@ -15,6 +24,7 @@ export const users = pgTable("users", {
 	role: userRoleEnum("role").default("user").notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false).notNull(),
 });
 
 // Matches Table
@@ -29,7 +39,7 @@ export const matches = pgTable("matches", {
 	homeScore: integer("home_score").default(0).notNull(),
 	awayScore: integer("away_score").default(0).notNull(),
 	hostId: integer("host_id")
-		.references(() => users.id)
+		.references(() => users.id, { onDelete: "restrict" })
 		.notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
