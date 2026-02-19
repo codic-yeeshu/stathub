@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/db.js";
 import { users } from "../db/schema.js";
 import { generateToken } from "../utils/jwt.js";
@@ -69,7 +69,10 @@ export const login = async (req, res) => {
 
 		const { email, password } = parsedLoginSchema.data;
 
-		const found = await db.select().from(users).where(eq(users.email, email));
+		const found = await db
+			.select()
+			.from(users)
+			.where(and(eq(users.email, email), eq(users.isDeleted, false)));
 
 		if (found.length === 0) {
 			return res.status(401).json({ error: "Invalid credentials" });
