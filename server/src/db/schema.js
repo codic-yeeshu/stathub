@@ -1,8 +1,31 @@
 import { relations } from "drizzle-orm";
-import { integer, jsonb, pgEnum, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+	boolean,
+	integer,
+	jsonb,
+	pgEnum,
+	pgTable,
+	serial,
+	text,
+	timestamp,
+} from "drizzle-orm/pg-core";
 
 // Define enums
 export const matchStatusEnum = pgEnum("match_status", ["scheduled", "live", "finished"]);
+
+export const userRoleEnum = pgEnum("user_role", ["admin", "user"]);
+
+// Users Table
+export const users = pgTable("users", {
+	id: serial("id").primaryKey(),
+	name: text("name").notNull(),
+	email: text("email").notNull().unique(),
+	password: text("password").notNull(),
+	role: userRoleEnum("role").default("user").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	isDeleted: boolean("is_deleted").default(false).notNull(),
+});
 
 // Matches Table
 export const matches = pgTable("matches", {
@@ -15,6 +38,9 @@ export const matches = pgTable("matches", {
 	endTime: timestamp("end_time"),
 	homeScore: integer("home_score").default(0).notNull(),
 	awayScore: integer("away_score").default(0).notNull(),
+	hostId: integer("host_id")
+		.references(() => users.id, { onDelete: "restrict" })
+		.notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -37,8 +63,16 @@ export const commentaries = pgTable("commentary", {
 });
 
 // Relations
-export const matchesRelations = relations(matches, ({ many }) => ({
+export const usersRelations = relations(users, ({ many }) => ({
+	matches: many(matches),
+}));
+
+export const matchesRelations = relations(matches, ({ one, many }) => ({
 	commentaries: many(commentaries),
+	host: one(users, {
+		fields: [matches.hostId],
+		references: [users.id],
+	}),
 }));
 
 export const commentariesRelations = relations(commentaries, ({ one }) => ({
