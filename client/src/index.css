@@ -1,1 +1,78 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+	/* 60% Base */
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+
+	/* 30% Surface */
+	--color-surface: var(--surface);
+	--color-surface-muted: var(--surface-muted);
+	--color-border: var(--border);
+
+	/* 10% Dynamic Accent */
+	--color-accent: var(--sport-accent);
+	--color-accent-soft: var(--sport-accent-soft);
+
+	--radius-card: 1.25rem;
+}
+
+:root {
+	--background: oklch(0.99 0.01 240);
+	--foreground: oklch(0.15 0.02 240);
+	--surface: oklch(1 0 0);
+	--surface-muted: oklch(0.96 0.01 240);
+	--border: oklch(0.92 0.01 240);
+
+	/* Default Accent (Indigo Tech) */
+	--sport-accent: oklch(0.6 0.2 250);
+	--sport-accent-soft: oklch(0.92 0.05 250);
+}
+
+.dark {
+	--background: oklch(0.1 0.01 250);
+	--foreground: oklch(0.98 0.01 250);
+	--surface: oklch(0.15 0.02 250);
+	--surface-muted: oklch(0.18 0.02 250);
+	--border: oklch(0.22 0.02 250);
+
+	--sport-accent: oklch(0.7 0.15 250);
+	--sport-accent-soft: oklch(0.2 0.06 250);
+}
+
+/* --- SPORT SPECIFIC OVERRIDES --- */
+
+[data-sport="cricket"] {
+	--sport-accent: oklch(0.75 0.18 140); /* Neon-ish Grass Green */
+	--sport-accent-soft: oklch(0.75 0.18 140 / 15%);
+}
+
+[data-sport="basketball"] {
+	--sport-accent: oklch(0.7 0.2 45); /* Electric Orange */
+	--sport-accent-soft: oklch(0.7 0.2 45 / 15%);
+}
+
+[data-sport="football"] {
+	--sport-accent: oklch(0.65 0.25 260); /* Deep Stadium Blue */
+	--sport-accent-soft: oklch(0.65 0.25 260 / 15%);
+}
+
+/* Small helpers used by components below */
+.app-bg {
+	background-color: var(--color-background);
+	color: var(--color-foreground);
+}
+
+/* header and footer fixed spacing helpers */
+.layout-content {
+	padding-top: 64px; /* header height */
+	padding-bottom: 64px; /* menu height */
+}
+
+/* active nav indicator */
+.nav-active {
+	background: linear-gradient(90deg, var(--sport-accent) 0%, var(--sport-accent-soft) 100%);
+	color: white;
+}
