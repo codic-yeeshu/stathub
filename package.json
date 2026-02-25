@@ -1,7 +1,7 @@
 {
 	"name": "stathub",
 	"scripts": {
-		"prepare": "pre-commit install && pre-commit install --hook-type pre-push",
+		"prepare": "pre-commit install --hook-type pre-commit --hook-type pre-push || echo \"pre-commit not found; install it via pipx/pip/brew to enable git hooks\"",
 		"lint-format:comment": "Format, lint, and organize imports of all files in the project, excluding files included in .gitignore.",
 		"lint-format": "biome check --write"
 	},
