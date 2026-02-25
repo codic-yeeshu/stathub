@@ -1,0 +1,23 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-added-large-files
+      - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: biome
+        name: biome lint + format
+        entry: pnpm run lint-format
+        language: system
+        files: \.(js|jsx|ts|tsx|css|html|json)$
+
+      - id: no-commit/push-to-main
+        name: prevent commit/push to main
+        entry: bash -c 'branch=$(git rev-parse --abbrev-ref HEAD); if [ "$branch" = "main" ]; then echo "Direct commits/push to main are not allowed."; exit 1; fi'
+        language: system
+        pass_filenames: false
+        stages: [pre-commit, pre-push]

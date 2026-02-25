@@ -1,5 +1,7 @@
 {
+	"name": "stathub",
 	"scripts": {
+		"prepare": "pre-commit install && pre-commit install --hook-type pre-push",
 		"lint-format:comment": "Format, lint, and organize imports of all files in the project, excluding files included in .gitignore.",
 		"lint-format": "biome check --write"
 	},

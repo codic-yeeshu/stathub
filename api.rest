@@ -1,6 +1,6 @@
 # Install Rest client extension in vs code to hit api's directly from here
 @serverUrl = http://localhost:8000
-# @serverUrl = 
+# @serverUrl =
 
 
 # ======================== Auth API ========================
