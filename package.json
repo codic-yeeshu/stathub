@@ -1,5 +1,6 @@
 {
 	"name": "stathub",
+	"packageManager": "pnpm@10.30.3",
 	"scripts": {
 		"prepare": "pre-commit install --hook-type pre-commit --hook-type pre-push || echo \"pre-commit not found; install it via pipx/pip/brew to enable git hooks\"",
 		"lint-format:comment": "Format, lint, and organize imports of all files in the project, excluding files included in .gitignore.",
