@@ -5,6 +5,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   root:
     runs-on: ubuntu-latest
@@ -23,7 +26,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install root dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run biome lint and format check
         run: pnpm run check-lint-format

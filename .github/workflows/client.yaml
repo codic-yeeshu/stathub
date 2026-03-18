@@ -7,10 +7,12 @@ on:
       - "**"
     paths:
       - "client/**/*"
+      - ".github/workflows/client.yaml"
   pull_request:
     branches: [main]
     paths:
       - "client/**/*"
+      - ".github/workflows/client.yaml"
 
 jobs:
   client:
