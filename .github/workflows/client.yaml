@@ -6,7 +6,6 @@ on:
     branches:
       - "**"
     paths:
-      - "client/**/*"
       - ".github/workflows/client.yaml"
   pull_request:
     branches: [main]
