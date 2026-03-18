@@ -8,6 +8,7 @@ import QuickView from "./pages/QuickView";
 
 export default function App() {
 	return (
+		// this comment is just added for the testing purpose of the client workflow, please ignore
 		<BrowserRouter>
 			<Routes>
 				<Route path="/" element={<MainLayout />}>
