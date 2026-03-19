@@ -9,7 +9,11 @@ permissions:
   contents: read
 
 jobs:
+  code-quality:
+    uses: ./.github/workflows/code-quality.yaml
+
   build-client:
+    needs: code-quality
     runs-on: ubuntu-latest
     outputs:
       imagename: ${{ steps.prepare-image.outputs.imagename }}
@@ -89,8 +93,10 @@ jobs:
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
             export IMAGE_NAME="${{ needs.build-client.outputs.imagename }}"
+            echo "Using image name: $IMAGE_NAME"
             export PORT_OUTSIDE="${{ secrets.CLIENT_PORT_OUTSIDE_DOCKER }}"
             export PORT_INSIDE="${{ secrets.CLIENT_PORT_INSIDE_DOCKER }}"
             export CONTAINER_NAME="${{ secrets.CLIENT_CONTAINER_NAME }}"
+            echo "Using container name: $CONTAINER_NAME"
             bash ~/deploy_client.sh
           EOF
