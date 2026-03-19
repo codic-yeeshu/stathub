@@ -35,6 +35,12 @@ jobs:
         working-directory: client
         run: pnpm install --frozen-lockfile
 
-      - name: Build client
+      - name: Install docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          echo docker --version
+
+      - name: Build client using docker
         working-directory: client
-        run: pnpm run build
+        run: docker build -t stathub-client .

@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  root:
+  lint-format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -30,3 +30,20 @@ jobs:
 
       - name: Run biome lint and format check
         run: pnpm run check-lint-format
+
+  pre-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install pre-commit
+        run: pip install pre-commit
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files
