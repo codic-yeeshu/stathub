@@ -1,6 +1,7 @@
 name: Code Quality Checks
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
   pull_request:
@@ -9,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  root:
+  quality-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -25,8 +26,17 @@ jobs:
           cache: pnpm
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install root dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
 
-      - name: Run biome lint and format check
+      - name: Install root dependencies
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pip install pre-commit
+
+      - name: Run Biome lint and format
         run: pnpm run check-lint-format
+
+      - name: Run pre-commit
+        run: pre-commit run --all-files

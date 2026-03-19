@@ -1,0 +1,100 @@
+name: Deploy to Production
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  code-quality:
+    uses: ./.github/workflows/code-quality.yaml
+
+  build-client:
+    needs: code-quality
+    runs-on: ubuntu-latest
+    outputs:
+      imagename: ${{ steps.prepare-image.outputs.imagename }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: client/pnpm-lock.yaml
+
+      - name: Install client dependencies
+        working-directory: client
+        run: pnpm install --frozen-lockfile
+
+      - name: Ensure Docker is installed
+        run: |
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker is already installed. Skipping installation."
+          else
+            echo "Docker not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+          fi
+          docker --version
+
+      - name: Prepare docker image name
+        id: prepare-image
+        working-directory: client
+        run: |
+          TIMESTAMP=$(date +%s)
+          IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/stathub-client:${TIMESTAMP}"
+          echo "Prepared image name: $IMAGE_NAME"
+          echo "imagename=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build docker image
+        working-directory: client
+        run: docker build -t ${{ steps.prepare-image.outputs.imagename }} .
+
+      - name: login to docker hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push docker image to docker hub
+        run: docker push ${{ steps.prepare-image.outputs.imagename }}
+
+  deploy-client:
+    needs: build-client
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Copy deploy script to EC2
+        working-directory: client
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/key.pem
+          chmod 400 ~/key.pem
+          scp -o StrictHostKeyChecking=no -i ~/key.pem \
+          deploy_client.sh \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: Deploy client on EC2
+        working-directory: client
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' <<EOF
+            export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
+            export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
+            export IMAGE_NAME="${{ needs.build-client.outputs.imagename }}"
+            export PORT_OUTSIDE="${{ secrets.CLIENT_PORT_OUTSIDE_DOCKER }}"
+            export PORT_INSIDE="${{ secrets.CLIENT_PORT_INSIDE_DOCKER }}"
+            export CONTAINER_NAME="${{ secrets.CLIENT_CONTAINER_NAME }}"
+            bash ~/deploy_client.sh
+          EOF

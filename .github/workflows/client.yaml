@@ -35,6 +35,17 @@ jobs:
         working-directory: client
         run: pnpm install --frozen-lockfile
 
-      - name: Build client
+      - name: Ensure Docker is installed
+        run: |
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker is already installed. Skipping installation."
+          else
+            echo "Docker not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+          fi
+          docker --version
+
+      - name: Build client using docker
         working-directory: client
-        run: pnpm run build
+        run: docker build -t stathub-client .
