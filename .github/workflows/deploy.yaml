@@ -58,7 +58,7 @@ jobs:
 
       - name: Build docker image
         working-directory: client
-        run: docker build -t ${{ steps.prepare-image.outputs.imagename }} .
+        run: docker build -t ${{ steps.prepare_image.outputs.imagename }} .
 
       - name: login to docker hub
         uses: docker/login-action@v4
@@ -67,7 +67,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Push docker image to docker hub
-        run: docker push ${{ steps.prepare-image.outputs.imagename }}
+        run: docker push ${{ steps.prepare_image.outputs.imagename }}
 
   deploy_client:
     needs: build_client
