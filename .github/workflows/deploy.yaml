@@ -92,7 +92,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' <<EOF
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
-            export IMAGE_NAME="${{ needs.build_client.outputs.imagename }}"
+            export IMAGE_NAME="${{ needs['build_client'].outputs.imagename }}"
             echo "Using image name: $IMAGE_NAME"
             export PORT_OUTSIDE="${{ secrets.CLIENT_PORT_OUTSIDE_DOCKER }}"
             export PORT_INSIDE="${{ secrets.CLIENT_PORT_INSIDE_DOCKER }}"
