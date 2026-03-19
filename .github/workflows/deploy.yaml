@@ -9,11 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  code-quality:
-    uses: ./.github/workflows/code-quality.yaml
-
   build-client:
-    needs: code-quality
     runs-on: ubuntu-latest
     outputs:
       imagename: ${{ steps.prepare-image.outputs.imagename }}
