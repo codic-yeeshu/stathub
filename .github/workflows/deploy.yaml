@@ -36,11 +36,16 @@ jobs:
         working-directory: client
         run: pnpm install --frozen-lockfile
 
-      - name: Install docker
+      - name: Ensure Docker is installed
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          echo docker --version
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker is already installed. Skipping installation."
+          else
+            echo "Docker not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+          fi
+          docker --version
 
       - name: Prepare docker image name
         id: prepare-image
@@ -76,7 +81,7 @@ jobs:
         working-directory: client
         run: |
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/key.pem
-          chmod 400 key.pem
+          chmod 400 ~/key.pem
           scp -o StrictHostKeyChecking=no -i ~/key.pem \
           deploy_client.sh \
           ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
