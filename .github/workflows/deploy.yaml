@@ -53,7 +53,8 @@ jobs:
         run: |
           TIMESTAMP=$(date +%s)
           IMAGE_NAME="${{ secrets.DOCKER_USERNAME }}/stathub-client:${TIMESTAMP}"
-          echo "Prepared image name: $IMAGE_NAME"
+          echo "Prepared image name: $IMAGE_NAME" > image_name.txt
+          cat image_name.txt
           echo "imagename=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
       - name: Build docker image

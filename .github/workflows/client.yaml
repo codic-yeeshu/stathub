@@ -31,10 +31,6 @@ jobs:
           cache: pnpm
           cache-dependency-path: client/pnpm-lock.yaml
 
-      - name: Install client dependencies
-        working-directory: client
-        run: pnpm install --frozen-lockfile
-
       - name: Ensure Docker is installed
         run: |
           if command -v docker >/dev/null 2>&1; then
