@@ -88,7 +88,7 @@ jobs:
       - name: Deploy client on EC2
         working-directory: client
         run: |
-          echo "this is the image name: ${{ needs.build_client.outputs.imagename }}"
+          echo This is the image name: ${{ needs.build_client.outputs.imagename }}
           ssh -o StrictHostKeyChecking=no -i ~/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' <<EOF
             export DOCKER_USERNAME="${{ secrets.DOCKER_USERNAME }}"
             export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
