@@ -16,7 +16,7 @@ jobs:
     needs: code_quality
     runs-on: ubuntu-latest
     outputs:
-      imagename: ${{ steps.prepare-image.outputs.imagename }}
+      imagename: ${{ steps.prepare_image.outputs.imagename }}
 
     steps:
       - name: Checkout repo
@@ -48,7 +48,7 @@ jobs:
           docker --version
 
       - name: Prepare docker image name
-        id: prepare-image
+        id: prepare_image
         working-directory: client
         run: |
           TIMESTAMP=$(date +%s)
