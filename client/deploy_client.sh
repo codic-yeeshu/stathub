@@ -26,21 +26,21 @@ echo "$DOCKER_PASSWORD" | docker login --username "$DOCKER_USERNAME" --password-
 
 # Pull the latest image
 echo "Pulling image $IMAGE_NAME..."
-docker pull "$IMAGE_NAME"
+sudo docker pull "$IMAGE_NAME"
 
 # Stop and remove existing container if it exists ---
-if docker ps -a --format '{{.Names}}' | grep -Eq "^$CONTAINER_NAME\$"; then
+if sudo docker ps -a --format '{{.Names}}' | grep -Eq "^$CONTAINER_NAME\$"; then
     echo "Stopping existing container $CONTAINER_NAME..."
-    docker stop "$CONTAINER_NAME"
+    sudo docker stop "$CONTAINER_NAME"
     echo "Removing existing container $CONTAINER_NAME..."
-    docker rm "$CONTAINER_NAME"
+    sudo docker rm "$CONTAINER_NAME"
 else
     echo "No existing container named $CONTAINER_NAME found. Proceeding to run new container."
 fi
 
 # Run the container
 echo "Running container $CONTAINER_NAME..."
-docker run -d \
+sudo docker run -d \
   -p "$PORT_OUTSIDE:$PORT_INSIDE" \
   --name "$CONTAINER_NAME" \
   "$IMAGE_NAME"
