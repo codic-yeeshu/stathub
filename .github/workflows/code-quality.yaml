@@ -1,6 +1,7 @@
 name: Code Quality Checks
 
 on:
+  workflow_call:
   workflow_dispatch:
   push:
   pull_request:
