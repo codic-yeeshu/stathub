@@ -15,7 +15,7 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile
 COPY . .
 
 # Set environment variables
-ARG VITE_API_URL
+ARG VITE_API_BASE_URL
 ARG VITE_GOOGLE_CLIENT_ID
 
 # Build the application
