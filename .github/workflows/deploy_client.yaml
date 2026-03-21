@@ -1,0 +1,90 @@
+name: Deploy Client to Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  code_quality:
+    uses: ./.github/workflows/code-quality.yaml
+
+  build_client:
+    needs: code_quality
+    runs-on: ubuntu-latest
+    outputs:
+      imagename: ${{ steps.prepare_image.outputs.imagename }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Ensure Docker is installed
+        run: |
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker is already installed. Skipping installation."
+          else
+            echo "Docker not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+          fi
+          docker --version
+
+      - name: Prepare docker image name
+        id: prepare_image
+        working-directory: client
+        run: |
+          TIMESTAMP=$(date +%s)
+          IMAGE_NAME="${{ vars.DOCKER_USERNAME }}/stathub-client:${TIMESTAMP}"
+          echo "Prepared image name: $IMAGE_NAME"
+          echo "imagename=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build docker image
+        working-directory: client
+        run: |
+          docker build \
+          --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
+          --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }} \
+          -t ${{ steps.prepare_image.outputs.imagename }} .
+
+      - name: login to docker hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push docker image to docker hub
+        run: docker push ${{ steps.prepare_image.outputs.imagename }}
+
+  deploy_client:
+    needs: build_client
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Copy deploy script to EC2
+        working-directory: client
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/key.pem
+          chmod 400 ~/key.pem
+          scp -o StrictHostKeyChecking=no -i ~/key.pem \
+          deploy_client.sh \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: Deploy client on EC2
+        working-directory: client
+        run: |
+          echo "Using image name: ${{ needs.build_client.outputs.imagename }}"
+          ssh -o StrictHostKeyChecking=no -i ~/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' <<'EOF'
+            export DOCKER_USERNAME="${{ vars.DOCKER_USERNAME }}"
+            export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
+            export IMAGE_NAME="${{ needs.build_client.outputs.imagename }}"
+            echo "Using image name: $IMAGE_NAME"
+            export PORT_OUTSIDE="${{ secrets.CLIENT_PORT_OUTSIDE_DOCKER }}"
+            export PORT_INSIDE="${{ secrets.CLIENT_PORT_INSIDE_DOCKER }}"
+            export CONTAINER_NAME="${{ secrets.CLIENT_CONTAINER_NAME }}"
+            bash ~/deploy_client.sh
+          EOF

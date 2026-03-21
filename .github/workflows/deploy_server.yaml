@@ -1,0 +1,106 @@
+name: Deploy Server to Production
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  code_quality:
+    uses: ./.github/workflows/code-quality.yaml
+
+  build_server:
+    needs: code_quality
+    runs-on: ubuntu-latest
+    outputs:
+      imagename: ${{ steps.prepare_image.outputs.imagename }}
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Ensure Docker is installed
+        run: |
+          if command -v docker >/dev/null 2>&1; then
+            echo "Docker is already installed. Skipping installation."
+          else
+            echo "Docker not found. Installing..."
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+          fi
+          docker --version
+
+      - name: Prepare docker image name
+        id: prepare_image
+        working-directory: server
+        run: |
+          TIMESTAMP=$(date +%s)
+          IMAGE_NAME="${{ vars.DOCKER_USERNAME }}/stathub-server:${TIMESTAMP}"
+          echo "Prepared image name: $IMAGE_NAME"
+          echo "imagename=$IMAGE_NAME" >> $GITHUB_OUTPUT
+
+      - name: Build docker image
+        working-directory: server
+        run: docker build -t ${{ steps.prepare_image.outputs.imagename }} .
+
+      - name: login to docker hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Push docker image to docker hub
+        run: docker push ${{ steps.prepare_image.outputs.imagename }}
+
+  deploy_server:
+    needs: build_server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Prepare env file
+        working-directory: server
+        run: |
+          echo "PORT=${{ secrets.SERVER_ENV_PORT }}" >> .server.env
+          echo "HOST=${{ secrets.SERVER_ENV_HOST }}" >> .server.env
+          echo "DATABASE_URL=${{ secrets.SERVER_ENV_DATABASE_URL }}" >> .server.env
+
+          echo "ARCJET_KEY=${{ secrets.SERVER_ENV_ARCJET_KEY }}" >> .server.env
+          echo "ARCJET_ENV=development" >> .server.env
+          echo "ARCJET_MODE=${{ secrets.SERVER_ENV_ARCJET_MODE }}" >> .server.env
+
+          echo "JWT_SECRET=${{ secrets.SERVER_ENV_JWT_SECRET }}" >> .server.env
+          echo "GOOGLE_CLIENT_ID=${{ secrets.SERVER_ENV_GOOGLE_CLIENT_ID }}" >> .server.env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.SERVER_ENV_GOOGLE_CLIENT_SECRET }}" >> .server.env
+
+          echo "RESEND_API_KEY=${{ secrets.SERVER_ENV_RESEND_API_KEY }}" >> .server.env
+
+          echo "CLIENT_URL=${{ vars.SERVER_ENV_CLIENT_URL }}" >> .server.env
+          echo "CLIENT_PASSWORD_RESET_URL=${{ vars.SERVER_ENV_CLIENT_URL }}${{ vars.SERVER_ENV_CLIENT_PASSWORD_RESET_ENDPOINT }}" >> .server.env
+
+      - name: Copy deploy script and server env file to EC2
+        working-directory: server
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/key.pem
+          chmod 400 ~/key.pem
+          scp -o StrictHostKeyChecking=no -i ~/key.pem \
+          deploy_server.sh \
+          .server.env \
+          ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: Deploy server on EC2
+        working-directory: server
+        run: |
+          echo "Using image name: ${{ needs.build_server.outputs.imagename }}"
+          ssh -o StrictHostKeyChecking=no -i ~/key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} 'bash -s' <<'EOF'
+            export DOCKER_USERNAME="${{ vars.DOCKER_USERNAME }}"
+            export DOCKER_PASSWORD="${{ secrets.DOCKER_PASSWORD }}"
+            export IMAGE_NAME="${{ needs.build_server.outputs.imagename }}"
+            echo "Using image name: $IMAGE_NAME"
+            export PORT_OUTSIDE="${{ secrets.SERVER_PORT_OUTSIDE_DOCKER }}"
+            export PORT_INSIDE="${{ secrets.SERVER_PORT_INSIDE_DOCKER }}"
+            export CONTAINER_NAME="${{ secrets.SERVER_CONTAINER_NAME }}"
+            bash ~/deploy_server.sh
+          EOF

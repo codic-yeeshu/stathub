@@ -1,5 +1,5 @@
 # Stage 1: Build Step
-FROM node:22-alpine AS build-step
+FROM node:24.14.0-alpine AS build-step
 
 # Set work directory
 WORKDIR /usr/src/app
@@ -14,11 +14,15 @@ RUN npm install -g pnpm && pnpm install --frozen-lockfile
 # Copy the rest of the application
 COPY . .
 
+# Set environment variables
+ARG VITE_API_URL
+ARG VITE_GOOGLE_CLIENT_ID
+
 # Build the application
 RUN pnpm run build
 
 # Stage 2: Nginx Server
-FROM nginx:1.25.0-alpine
+FROM nginx:1.28.2-alpine
 
 # Copy the Nginx config file
 COPY nginx.conf /etc/nginx/nginx.conf
