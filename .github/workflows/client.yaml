@@ -17,18 +17,6 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          cache: true
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24.14.0
-          cache: pnpm
-          cache-dependency-path: client/pnpm-lock.yaml
-
       - name: Ensure Docker is installed
         run: |
           if command -v docker >/dev/null 2>&1; then
