@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { resetPasswordUser } from "../api/auth";
 import Button from "../components/Button";
@@ -15,6 +15,12 @@ export default function ResetPassword() {
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
 	const [success, setSuccess] = useState(false);
+
+	useEffect(() => {
+		if (!token) {
+			setError("Invalid or missing reset token.");
+		}
+	}, [token]);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();

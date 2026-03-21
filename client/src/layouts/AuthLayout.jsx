@@ -2,7 +2,7 @@ export default function AuthLayout({ children, title, subtitle }) {
 	return (
 		<div className="app-bg flex flex-col md:flex-row">
 			{/* Animation / Graphic column */}
-			<div className="flex-1 md:flex-[0.4] bg-(--color-surface) flex items-center justify-center p-8 border-b md:border-b-0 md:border-r border-(--color-border)">
+			<div className="hidden md:flex md:flex-[0.4] bg-(--color-surface) items-center justify-center p-8 border-b md:border-b-0 md:border-r border-(--color-border)">
 				<div className="w-full max-w-sm aspect-square bg-(--color-surface-muted) rounded-3xl flex items-center justify-center shadow-inner relative overflow-hidden">
 					{/* Placeholder for Lottie Animation */}
 					<div className="absolute inset-0 bg-linear-to-br from-(--color-accent-soft) to-transparent opacity-50"></div>

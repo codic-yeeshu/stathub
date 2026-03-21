@@ -4,10 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { googleAuthUser, signupUser } from "../api/auth";
 import Button from "../components/Button";
 import Input from "../components/Input";
+import { useAuth } from "../context/AuthContext";
 import AuthLayout from "../layouts/AuthLayout";
 
 export default function Signup() {
 	const navigate = useNavigate();
+	const { login } = useAuth();
 	const [formData, setFormData] = useState({ name: "", email: "", password: "" });
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
@@ -19,9 +21,8 @@ export default function Signup() {
 			setError("");
 			try {
 				const data = await googleAuthUser(codeResponse.code);
-				if (data.token) {
-					localStorage.token = data.token;
-					localStorage.user = JSON.stringify(data.user);
+				if (data.token && data.user) {
+					login(data.user, data.token);
 					navigate("/");
 				}
 			} catch (err) {
@@ -53,8 +54,7 @@ export default function Signup() {
 
 			// Store token if returned (assuming data.token is provided based on prompt)
 			if (data.token) {
-				localStorage.token = data.token;
-				localStorage.user = JSON.stringify(data.user || formData);
+				login(data.user || formData, data.token);
 				navigate("/profile");
 			} else {
 				// Redirect to login if token is not auto-returned

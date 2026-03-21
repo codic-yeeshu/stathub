@@ -146,7 +146,10 @@ export const googleAuth = async (req, res) => {
 		const { sub: googleId, email, name, picture: avatar } = payload;
 
 		// Check if user already exists
-		const existingUsers = await db.select().from(users).where(eq(users.email, email));
+		const existingUsers = await db
+			.select()
+			.from(users)
+			.where(and(eq(users.email, email), eq(users.isDeleted, false)));
 
 		let user;
 
@@ -209,8 +212,8 @@ export const forgotPassword = async (req, res) => {
 
 		const existingUsers = await db.select().from(users).where(eq(users.email, email));
 		if (existingUsers.length === 0) {
-			// Returning 404
-			return res.status(404).json({ error: "User not found" });
+			// Return success to prevent user enumeration
+			return res.status(200).json({ message: "Password reset instructions sent to your email" });
 		}
 		const user = existingUsers[0];
 

@@ -1,6 +1,6 @@
 import { defineConfig } from "drizzle-kit";
-import { CONFIG } from "./src/config/config";
-import { logError } from "./src/utils/utils";
+import { CONFIG } from "./src/config/config.js";
+import { logError } from "./src/utils/utils.js";
 
 if (!CONFIG.DATABASE_URL) {
 	// We can't throw here if we want to run `drizzle-kit` without loading the .env in some contexts, but usually it's fine.

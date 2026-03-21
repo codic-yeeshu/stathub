@@ -1,31 +1,13 @@
-import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "../components/Button";
+import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
 	const navigate = useNavigate();
-	const [user, setUser] = useState(null);
-	const [isLoading, setIsLoading] = useState(true);
-
-	useEffect(() => {
-		// Mock checking session
-		const token = localStorage.getItem("token");
-		const storedUser = localStorage.getItem("user");
-
-		if (token && storedUser) {
-			try {
-				setUser(JSON.parse(storedUser));
-			} catch (e) {
-				console.error("Failed to parse user data", e);
-			}
-		}
-		setIsLoading(false);
-	}, []);
+	const { user, isLoading, logout } = useAuth();
 
 	const handleLogout = () => {
-		localStorage.removeItem("token");
-		localStorage.removeItem("user");
-		setUser(null);
+		logout();
 		navigate("/login");
 	};
 

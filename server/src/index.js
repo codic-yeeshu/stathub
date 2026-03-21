@@ -10,13 +10,18 @@ import { matchesRouter } from "./routes/matches.js";
 import { logIt } from "./utils/utils.js";
 import { attachWebSocketServer } from "./ws/server.js";
 
-const PORT = Number(CONFIG.PORT || 8000);
-const HOST = CONFIG.HOST || "0.0.0.0";
+const PORT = Number(CONFIG.PORT);
+const HOST = CONFIG.HOST;
 
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
-app.use(cors());
+app.use(
+	cors({
+		origin: CONFIG.CLIENT_URL,
+		credentials: true,
+	}),
+);
 
 app.get("/", (_req, res) => {
 	res.send("Server is up and running!");

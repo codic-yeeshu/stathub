@@ -3,10 +3,6 @@ name: Server CICD
 on:
   workflow_dispatch:
   push:
-    branches:
-      - "**"
-    paths:
-      - ".github/workflows/server.yaml"
   pull_request:
     branches: [main]
     paths:
@@ -27,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24.14.0
           cache: pnpm
           cache-dependency-path: server/pnpm-lock.yaml
 

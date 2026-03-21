@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import { CONFIG } from "../config/config";
+import { CONFIG } from "../config/config.js";
 
 const JWT_SECRET = CONFIG.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";

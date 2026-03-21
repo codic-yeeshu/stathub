@@ -4,10 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { googleAuthUser, loginUser } from "../api/auth";
 import Button from "../components/Button";
 import Input from "../components/Input";
+import { useAuth } from "../context/AuthContext";
 import AuthLayout from "../layouts/AuthLayout";
 
 export default function Login() {
 	const navigate = useNavigate();
+	const { login } = useAuth();
 	const [formData, setFormData] = useState({ email: "", password: "" });
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState("");
@@ -19,10 +21,11 @@ export default function Login() {
 			setError("");
 			try {
 				const data = await googleAuthUser(codeResponse.code);
-				if (data.token) {
-					localStorage.token = data.token;
-					localStorage.user = JSON.stringify(data.user);
+				if (data.token && data.user) {
+					login(data.user, data.token);
 					navigate("/");
+				} else {
+					setError("Google login failed: No authentication token received.");
 				}
 			} catch (err) {
 				setError(err.message);
@@ -52,8 +55,9 @@ export default function Login() {
 			const data = await loginUser(formData);
 
 			// Store token and user details
-			if (data.token) localStorage.token = data.token;
-			if (data.user) localStorage.user = JSON.stringify(data.user);
+			if (data.token && data.user) {
+				login(data.user, data.token);
+			}
 
 			// Redirect to home page
 			navigate("/");

@@ -26,8 +26,8 @@ export default function ForgotPassword() {
 			await forgotPasswordUser(email);
 
 			setSuccess(true);
-		} catch (err) {
-			setError(err.message);
+		} catch (_err) {
+			setError("We couldn't process your request right now. Please try again shortly.");
 		} finally {
 			setIsLoading(false);
 		}
