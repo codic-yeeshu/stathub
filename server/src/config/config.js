@@ -1,0 +1,13 @@
+export const CONFIG = {
+	DATABASE_URL: process.env.DATABASE_URL,
+	PORT: process.env.PORT || 8000,
+	HOST: process.env.HOST || "0.0.0.0",
+	ARCJET_KEY: process.env.ARCJET_KEY,
+	ARCJET_MODE: process.env.ARCJET_MODE,
+	JWT_SECRET: process.env.JWT_SECRET,
+	RESEND_API_KEY: process.env.RESEND_API_KEY,
+	GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+	CLIENT_URL: process.env.CLIENT_URL,
+	CLIENT_PASSWORD_RESET_URL: process.env.CLIENT_PASSWORD_RESET_URL,
+};

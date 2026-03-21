@@ -1,8 +1,9 @@
 import arcjet, { detectBot, shield, slidingWindow } from "@arcjet/node";
+import { CONFIG } from "./config/config.js";
 import { logError } from "./utils/utils.js";
 
-const arcjetKey = process.env.ARCJET_KEY;
-const arcjetMode = process.env.ARCJET_MODE === "DRY_RUN" ? "DRY_RUN" : "LIVE";
+const arcjetKey = CONFIG.ARCJET_KEY;
+const arcjetMode = CONFIG.ARCJET_MODE === "DRY_RUN" ? "DRY_RUN" : "LIVE";
 
 if (!arcjetKey) {
 	logError("ARCJET_KEY is not set. Arcjet security is disabled.");

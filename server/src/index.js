@@ -1,19 +1,27 @@
 import "dotenv/config";
 import http from "node:http";
+import cors from "cors";
 import express from "express";
 import { securityMiddleware } from "./arcjet.js";
+import { CONFIG } from "./config/config.js";
 import { authRouter } from "./routes/authRoutes.js";
 import { commentaryRouter } from "./routes/commentary.js";
 import { matchesRouter } from "./routes/matches.js";
 import { logIt } from "./utils/utils.js";
 import { attachWebSocketServer } from "./ws/server.js";
 
-const PORT = Number(process.env.PORT || 8000);
-const HOST = process.env.HOST || "0.0.0.0";
+const PORT = Number(CONFIG.PORT);
+const HOST = CONFIG.HOST;
 
 const app = express();
 const server = http.createServer(app);
 app.use(express.json());
+app.use(
+	cors({
+		origin: CONFIG.CLIENT_URL,
+		credentials: true,
+	}),
+);
 
 app.get("/", (_req, res) => {
 	res.send("Server is up and running!");
