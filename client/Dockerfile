@@ -9,7 +9,7 @@ COPY package.json ./
 COPY pnpm-lock.yaml ./
 
 # Install dependencies efficiently
-RUN npm install -g pnpm
+RUN corepack enable
 
 RUN pnpm install --frozen-lockfile
 
