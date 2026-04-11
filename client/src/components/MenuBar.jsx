@@ -11,7 +11,7 @@ const items = [
 export default function MenuBar() {
 	return (
 		<nav className="fixed bottom-0 left-0 right-0 h-16 bg-(--color-surface) border-t border-(--color-border) z-30">
-			<div className="max-w-4xl mx-auto h-full flex items-center justify-between px-4">
+			<div className="max-w-2xl mx-auto h-full flex items-center justify-between px-4">
 				{items.map((it) => (
 					<NavLink
 						key={it.to}
