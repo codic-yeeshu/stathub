@@ -172,41 +172,41 @@ export default function Home() {
 			<FeaturedCarousel featuredMatches={featuredMatches} />
 
 			{/* Upcoming Games */}
-			<section className="px-2 pb-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150 fill-mode-both">
+			<section className="px-2 pb-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-150">
 				<h2 className="text-xl font-bold mb-4">Ongoing & Upcoming</h2>
 				<div className="flex flex-col gap-4">
 					{matchCards.map((match) => (
 						<div
 							key={match.id}
-							className="glass-card rounded-[1.25rem] p-4 flex flex-col gap-3 transition-sport hover:-translate-y-1 cursor-pointer relative overflow-hidden"
+							className="glass-card rounded-card p-4 flex flex-col gap-3 transition-sport hover:-translate-y-1 cursor-pointer relative overflow-hidden"
 							data-sport={match.sport}
 						>
-							<div className="absolute left-0 top-0 bottom-0 w-1 bg-[color:var(--sport-accent)]" />
+							<div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />
 
 							<div className="flex justify-between text-sm pl-2">
-								<span className="font-bold text-[color:var(--color-foreground)] opacity-80">
+								<span className="font-bold text-(--color-foreground) opacity-80">
 									{match.title}
 								</span>
-								<span className="font-medium text-[color:var(--sport-accent)] bg-[color-mix(in_oklch,var(--sport-accent),transparent_85%)] px-2 py-0.5 rounded-sm">
+								<span className="font-medium text-accent bg-[color-mix(in_oklch,var(--sport-accent),transparent_85%)] px-2 py-0.5 rounded-sm">
 									{match.time}
 								</span>
 							</div>
 
 							<div className="flex items-center justify-between mt-1 pl-2">
 								<div className="flex items-center gap-4 flex-1">
-									<div className="w-10 h-10 rounded-full bg-[color:var(--color-surface-muted)] flex items-center justify-center text-sm font-bold border border-[color:var(--color-border)] shadow-sm shrink-0">
+									<div className="w-10 h-10 rounded-full bg-(--color-surface-muted) flex items-center justify-center text-sm font-bold border border-(--color-border) shadow-sm shrink-0">
 										{match.team1.substring(0, 3)}
 									</div>
 									<span className="font-bold text-lg">{match.team1}</span>
 								</div>
 
-								<div className="text-xs font-black text-[color:var(--color-foreground)] opacity-30 px-3 bg-[color:var(--color-surface-muted)] py-1 rounded-full shrink-0">
+								<div className="text-xs font-black text-(--color-foreground) opacity-30 px-3 bg-(--color-surface-muted) py-1 rounded-full shrink-0">
 									VS
 								</div>
 
 								<div className="flex items-center gap-4 flex-1 justify-end">
 									<span className="font-bold text-lg text-right">{match.team2}</span>
-									<div className="w-10 h-10 rounded-full bg-[color:var(--color-surface-muted)] flex items-center justify-center text-sm font-bold border border-[color:var(--color-border)] shadow-sm shrink-0">
+									<div className="w-10 h-10 rounded-full bg-(--color-surface-muted) flex items-center justify-center text-sm font-bold border border-(--color-border) shadow-sm shrink-0">
 										{match.team2.substring(0, 3)}
 									</div>
 								</div>

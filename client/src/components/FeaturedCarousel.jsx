@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 export default function FeaturedCarousel({ featuredMatches }) {
 	const carouselRef = useRef(null);
 	const [autoScrollKey, setAutoScrollKey] = useState(0);
+	const interactionTimeoutRef = useRef(null);
 
 	const scrollNext = useCallback(() => {
 		if (carouselRef.current) {
@@ -35,10 +36,19 @@ export default function FeaturedCarousel({ featuredMatches }) {
 		return () => clearInterval(interval);
 	}, [scrollNext, autoScrollKey]);
 
-	const handleUserInteraction = () => {
-		// Reset the timer when user interacts manually
-		setAutoScrollKey((prev) => prev + 1);
-	};
+	const handleUserInteraction = useCallback(() => {
+		if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
+		interactionTimeoutRef.current = setTimeout(() => {
+			setAutoScrollKey((prev) => prev + 1);
+		}, 150);
+	}, []);
+
+	useEffect(
+		() => () => {
+			if (interactionTimeoutRef.current) clearTimeout(interactionTimeoutRef.current);
+		},
+		[],
+	);
 
 	return (
 		<section className="mt-6 mb-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
