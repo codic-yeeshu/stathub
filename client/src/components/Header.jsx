@@ -4,7 +4,7 @@ import ThemeToggle from "./ThemeToggle";
 export default function Header() {
 	return (
 		<header className="fixed top-0 left-0 right-0 h-16 bg-(--color-surface) border-b border-(--color-border) flex items-center px-4 z-30">
-			<div className="flex items-center justify-between w-full max-w-4xl mx-auto">
+			<div className="flex items-center justify-between w-full max-w-2xl mx-auto">
 				<div className="text-lg font-semibold">StatHub</div>
 
 				<div className="flex items-center gap-4">

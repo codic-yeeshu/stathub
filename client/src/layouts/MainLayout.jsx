@@ -9,7 +9,7 @@ export default function MainLayout() {
 			<Header />
 
 			{/* Main content area - give top and bottom padding to avoid overlap */}
-			<main className="flex-1 layout-content container mx-auto px-4">
+			<main className="flex-1 layout-content w-full max-w-2xl mx-auto px-4">
 				<Outlet />
 			</main>
 
