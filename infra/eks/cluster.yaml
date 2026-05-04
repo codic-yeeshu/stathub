@@ -20,7 +20,7 @@ metadata:
   version: "1.30"
 
 iam:
-  serviceRoleARN: arn:aws:iam::541357644124:role/LabRole
+  instanceRoleARN: arn:aws:iam::<YOUR_ACCOUNT_ID>:role/LabRole
   withOIDC: false
 
 # Auto Mode is being made the default in upcoming eksctl versions; pin

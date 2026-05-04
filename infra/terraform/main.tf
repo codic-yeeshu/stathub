@@ -39,7 +39,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts" {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
     }
-    bucket_key_enabled = true
   }
 }
 
@@ -61,9 +60,17 @@ resource "aws_s3_bucket_ownership_controls" "artifacts" {
 }
 
 # Two ECR repos so server and client images are kept separate.
+# SHA-tagged images are immutable to prevent silent rewrites of a deployed
+# build; `latest` is excluded from the rule because the CI workflow
+# re-points it at every successful build.
 resource "aws_ecr_repository" "server" {
   name                 = "${var.project}-server"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = "latest"
+    filter_type = "WILDCARD"
+  }
 
   image_scanning_configuration {
     scan_on_push = true
@@ -76,7 +83,12 @@ resource "aws_ecr_repository" "server" {
 
 resource "aws_ecr_repository" "client" {
   name                 = "${var.project}-client"
-  image_tag_mutability = "MUTABLE"
+  image_tag_mutability = "IMMUTABLE_WITH_EXCLUSION"
+
+  image_tag_mutability_exclusion_filter {
+    filter      = "latest"
+    filter_type = "WILDCARD"
+  }
 
   image_scanning_configuration {
     scan_on_push = true
