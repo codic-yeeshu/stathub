@@ -1,0 +1,45 @@
+# eksctl ClusterConfig tuned for AWS Academy Learner Lab.
+#
+# Why this file exists: Learner Lab denies `iam:CreateRole`, so the default
+# `eksctl create cluster --managed` flow blows up trying to create its own
+# service / node roles. This config tells eksctl to reuse the pre-provisioned
+# `LabRole` for both the EKS control-plane service role and the worker-node
+# instance role.
+#
+# Before applying, replace 541357644124 in the two ARNs below with your own
+# 12-digit account id (visible in `aws sts get-caller-identity`).
+#
+# Apply with:
+#   eksctl create cluster -f infra/eks/cluster.yaml
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: stathub-eks
+  region: us-east-1
+  version: "1.30"
+
+iam:
+  serviceRoleARN: arn:aws:iam::541357644124:role/LabRole
+  withOIDC: false
+
+# Auto Mode is being made the default in upcoming eksctl versions; pin
+# the legacy behaviour explicitly so this config is reproducible.
+autoModeConfig:
+  enabled: false
+
+addons:
+  - name: vpc-cni
+  - name: coredns
+  - name: kube-proxy
+
+managedNodeGroups:
+  - name: stathub-ng
+    instanceType: t3.small
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 3
+    volumeSize: 20
+    privateNetworking: false
+    iam:
+      instanceRoleARN: arn:aws:iam::541357644124:role/LabRole

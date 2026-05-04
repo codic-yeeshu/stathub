@@ -118,18 +118,18 @@ export default function FeaturedCarousel({ featuredMatches }) {
 				{featuredMatches.map((match) => (
 					<div
 						key={match.id}
-						className="shrink-0 w-[85%] sm:w-[320px] snap-center glass-card rounded-[1.5rem] p-5 relative overflow-hidden transition-sport cursor-pointer hover:scale-[1.02]"
+						className="shrink-0 w-[85%] sm:w-[320px] snap-center glass-card rounded-3xl p-5 relative overflow-hidden transition-sport cursor-pointer hover:scale-[1.02]"
 						data-sport={match.sport}
 					>
 						{/* Decorative accent top border */}
-						<div className="absolute top-0 left-0 right-0 h-1.5 bg-[var(--sport-accent)]" />
+						<div className="absolute top-0 left-0 right-0 h-1.5 bg-accent" />
 
 						<div className="flex justify-between items-center mb-6">
-							<span className="text-xs font-bold text-[var(--sport-accent)] bg-[color-mix(in_oklch,var(--sport-accent),transparent_85%)] px-2.5 py-1 rounded-md uppercase tracking-widest flex items-center gap-1.5">
-								<span className="w-1.5 h-1.5 rounded-full bg-[var(--sport-accent)] animate-pulse" />
+							<span className="text-xs font-bold text-accent bg-[color-mix(in_oklch,var(--sport-accent),transparent_85%)] px-2.5 py-1 rounded-md uppercase tracking-widest flex items-center gap-1.5">
+								<span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
 								{match.status}
 							</span>
-							<span className="text-xs font-medium capitalize text-(--color-foreground)/60 flex items-center gap-1">
+							<span className="text-xs font-medium capitalize text-foreground/60 flex items-center gap-1">
 								{match.sport}
 							</span>
 						</div>

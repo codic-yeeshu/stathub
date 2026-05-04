@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: stathub-client
+  namespace: stathub
+  labels:
+    app: stathub-client
+  annotations:
+    # NLB is the only Load Balancer type allowed by AWS Academy LabRole.
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+spec:
+  type: LoadBalancer
+  selector:
+    app: stathub-client
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

@@ -1,0 +1,282 @@
+name: Deploy to EKS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  EKS_CLUSTER_NAME: ${{ vars.EKS_CLUSTER_NAME || 'stathub-eks' }}
+  K8S_NAMESPACE: stathub
+  ECR_SERVER_REPO: stathub-server
+  ECR_CLIENT_REPO: stathub-client
+
+jobs:
+  # ----------------------------------------------------------------------
+  # Phase 1 - Run unit, integration and e2e tests for client and server.
+  # ----------------------------------------------------------------------
+  test:
+    name: Phase 1 - Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Install server dependencies
+        working-directory: server
+        run: pnpm install --frozen-lockfile
+
+      - name: Run server tests with coverage
+        working-directory: server
+        run: pnpm run test:ci
+
+      - name: Install client dependencies
+        working-directory: client
+        run: pnpm install --frozen-lockfile
+
+      - name: Run client tests with coverage
+        working-directory: client
+        run: pnpm run test:ci
+
+      - name: Upload server test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-test-report
+          path: |
+            server/junit.xml
+            server/coverage/
+          if-no-files-found: ignore
+
+      - name: Upload client test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-test-report
+          path: |
+            client/junit.xml
+            client/coverage/
+          if-no-files-found: ignore
+
+  # ----------------------------------------------------------------------
+  # Phase 2 - Provision the S3 artifact bucket and ECR repos with Terraform.
+  # Skipped on pull requests so PRs don't mutate cloud infra.
+  # ----------------------------------------------------------------------
+  terraform:
+    name: Phase 2 - Terraform Apply
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      ecr_server_url: ${{ steps.tf_outputs.outputs.ecr_server_url }}
+      ecr_client_url: ${{ steps.tf_outputs.outputs.ecr_client_url }}
+      bucket_name: ${{ steps.tf_outputs.outputs.bucket_name }}
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -input=false -out=tfplan
+
+      - name: Terraform Apply
+        run: terraform apply -input=false -auto-approve tfplan
+
+      - name: Capture outputs
+        id: tf_outputs
+        run: |
+          echo "ecr_server_url=$(terraform output -raw ecr_server_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "ecr_client_url=$(terraform output -raw ecr_client_repository_url)" >> "$GITHUB_OUTPUT"
+          echo "bucket_name=$(terraform output -raw artifacts_bucket_name)" >> "$GITHUB_OUTPUT"
+
+  # ----------------------------------------------------------------------
+  # Phase 3 - Build server and client images and push them to ECR.
+  # ----------------------------------------------------------------------
+  build_and_push:
+    name: Phase 3 - Build & Push Images
+    needs: terraform
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    outputs:
+      server_image: ${{ steps.tags.outputs.server_image }}
+      client_image: ${{ steps.tags.outputs.client_image }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          SHA="${GITHUB_SHA::7}"
+          echo "server_image=${{ needs.terraform.outputs.ecr_server_url }}:${SHA}" >> "$GITHUB_OUTPUT"
+          echo "client_image=${{ needs.terraform.outputs.ecr_client_url }}:${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push server image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./server
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.server_image }}
+            ${{ needs.terraform.outputs.ecr_server_url }}:latest
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+
+      - name: Build and push client image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./client
+          push: true
+          tags: |
+            ${{ steps.tags.outputs.client_image }}
+            ${{ needs.terraform.outputs.ecr_client_url }}:latest
+          build-args: |
+            VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.VITE_GOOGLE_CLIENT_ID }}
+          cache-from: type=gha,scope=client
+          cache-to: type=gha,mode=max,scope=client
+
+  # ----------------------------------------------------------------------
+  # Phase 4 - Deploy to EKS. Renders manifests with the freshly built image
+  # tags and applies them. The cluster itself is provisioned out of band
+  # (see DEPLOY_EKS.md for the eksctl steps).
+  # ----------------------------------------------------------------------
+  deploy_eks:
+    name: Phase 4 - Deploy to EKS
+    needs: build_and_push
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: v1.30.0
+
+      - name: Update kubeconfig for EKS cluster
+        run: |
+          aws eks update-kubeconfig \
+            --region "${AWS_REGION}" \
+            --name "${EKS_CLUSTER_NAME}"
+
+      - name: Verify cluster connectivity
+        run: |
+          kubectl version --client
+          kubectl get nodes
+
+      - name: Apply namespace
+        run: kubectl apply -f infra/k8s/namespace.yaml
+
+      - name: Create or update server Secret
+        env:
+          DATABASE_URL: ${{ secrets.SERVER_ENV_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.SERVER_ENV_JWT_SECRET }}
+          ARCJET_KEY: ${{ secrets.SERVER_ENV_ARCJET_KEY }}
+          ARCJET_MODE: ${{ secrets.SERVER_ENV_ARCJET_MODE }}
+          RESEND_API_KEY: ${{ secrets.SERVER_ENV_RESEND_API_KEY }}
+          GOOGLE_CLIENT_ID: ${{ secrets.SERVER_ENV_GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.SERVER_ENV_GOOGLE_CLIENT_SECRET }}
+          CLIENT_URL: ${{ vars.SERVER_ENV_CLIENT_URL }}
+          CLIENT_PASSWORD_RESET_URL: ${{ vars.SERVER_ENV_CLIENT_URL }}${{ vars.SERVER_ENV_CLIENT_PASSWORD_RESET_ENDPOINT }}
+        run: |
+          kubectl -n "${K8S_NAMESPACE}" create secret generic stathub-server-secrets \
+            --from-literal=DATABASE_URL="${DATABASE_URL}" \
+            --from-literal=JWT_SECRET="${JWT_SECRET}" \
+            --from-literal=ARCJET_KEY="${ARCJET_KEY}" \
+            --from-literal=ARCJET_MODE="${ARCJET_MODE}" \
+            --from-literal=RESEND_API_KEY="${RESEND_API_KEY}" \
+            --from-literal=GOOGLE_CLIENT_ID="${GOOGLE_CLIENT_ID}" \
+            --from-literal=GOOGLE_CLIENT_SECRET="${GOOGLE_CLIENT_SECRET}" \
+            --from-literal=CLIENT_URL="${CLIENT_URL}" \
+            --from-literal=CLIENT_PASSWORD_RESET_URL="${CLIENT_PASSWORD_RESET_URL}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Render and apply server manifests
+        env:
+          SERVER_IMAGE: ${{ needs.build_and_push.outputs.server_image }}
+        run: |
+          sed "s|SERVER_IMAGE_PLACEHOLDER|${SERVER_IMAGE}|g" infra/k8s/server-deployment.yaml | kubectl apply -f -
+          kubectl apply -f infra/k8s/server-service.yaml
+          kubectl apply -f infra/k8s/server-service-lb.yaml
+
+      - name: Render and apply client manifests
+        env:
+          CLIENT_IMAGE: ${{ needs.build_and_push.outputs.client_image }}
+        run: |
+          sed "s|CLIENT_IMAGE_PLACEHOLDER|${CLIENT_IMAGE}|g" infra/k8s/client-deployment.yaml | kubectl apply -f -
+          kubectl apply -f infra/k8s/client-service.yaml
+
+      - name: Wait for server rollout
+        run: kubectl -n "${K8S_NAMESPACE}" rollout status deployment/stathub-server --timeout=5m
+
+      - name: Wait for client rollout
+        run: kubectl -n "${K8S_NAMESPACE}" rollout status deployment/stathub-client --timeout=5m
+
+      - name: Print service endpoints
+        run: |
+          echo "Pods:"
+          kubectl -n "${K8S_NAMESPACE}" get pods -o wide
+          echo ""
+          echo "Services:"
+          kubectl -n "${K8S_NAMESPACE}" get svc
