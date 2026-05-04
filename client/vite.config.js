@@ -12,4 +12,15 @@ export default defineConfig({
 		}),
 		tailwindcss(),
 	],
+	test: {
+		environment: "jsdom",
+		globals: true,
+		setupFiles: ["./src/test/setup.js"],
+		css: false,
+		coverage: {
+			provider: "v8",
+			reporter: ["text", "lcov", "json-summary"],
+			include: ["src/components/**", "src/context/**", "src/api/**", "src/utils/**"],
+		},
+	},
 });

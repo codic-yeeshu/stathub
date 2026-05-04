@@ -1,0 +1,22 @@
+# Public LoadBalancer for the API. Useful when the client (which is also
+# served from a separate LB) needs to reach the API from a browser. If you
+# only want to expose the client, you can skip applying this manifest.
+apiVersion: v1
+kind: Service
+metadata:
+  name: stathub-server-lb
+  namespace: stathub
+  labels:
+    app: stathub-server
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: nlb
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
+spec:
+  type: LoadBalancer
+  selector:
+    app: stathub-server
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP
