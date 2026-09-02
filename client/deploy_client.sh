@@ -40,6 +40,7 @@ fi
 
 # Run the container
 echo "Running container $CONTAINER_NAME..."
+echo "Inside port: $PORT_INSIDE , Outside Port: $PORT_OUTSIDE"
 sudo docker run -d \
   -p "$PORT_OUTSIDE:$PORT_INSIDE" \
   --name "$CONTAINER_NAME" \
