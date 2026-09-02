@@ -2,12 +2,12 @@ name: Client CICD
 
 on:
   workflow_dispatch:
-  push:
-  pull_request:
-    branches: [main]
-    paths:
-      - "client/**/*"
-      - ".github/workflows/client.yaml"
+  # push:
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - "client/**/*"
+  #     - ".github/workflows/client.yaml"
 
 jobs:
   client:
