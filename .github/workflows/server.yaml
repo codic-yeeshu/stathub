@@ -2,12 +2,12 @@ name: Server CICD
 
 on:
   workflow_dispatch:
-  push:
-  pull_request:
-    branches: [main]
-    paths:
-      - "server/**/*"
-      - ".github/workflows/server.yaml"
+  # push:
+  # pull_request:
+  #   branches: [main]
+  #   paths:
+  #     - "server/**/*"
+  #     - ".github/workflows/server.yaml"
 
 jobs:
   server:
