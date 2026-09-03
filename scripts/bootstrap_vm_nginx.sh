@@ -57,6 +57,7 @@ sudo certbot --nginx \
   --agree-tos \
   --no-eff-email \
   --redirect \
+  --hsts \
   --non-interactive
 
 echo "Testing nginx again..."
